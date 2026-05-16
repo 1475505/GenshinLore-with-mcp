@@ -1515,7 +1515,7 @@ perpetua  perennis  imperia
                 }
 
                 const table = document.createElement('table');
-                table.className = 'lightrelam-table';
+                table.className = 'common-table';
 
                 // 三奉行表格：设置列宽比例（第1、2、3列相同，第4列最宽）
                 if (isSanBengXingTable && colCount >= 4) {

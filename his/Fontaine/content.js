@@ -1762,7 +1762,7 @@ iustitia  omnia  vincit
                 }
 
                 const table = document.createElement('table');
-                table.className = 'lightrelam-table';
+                table.className = 'common-table';
 
                 // 检查表头是否有内容
                 const hasHeaderContent = headerCells.some(cell => !isBlankCell(cell));

@@ -1828,7 +1828,7 @@ CL-02：很好。你几乎让我感到惋惜了，第八席，也许已经让我
                 }
 
                 const table = document.createElement('table');
-                table.className = 'lightrelam-table';
+                table.className = 'common-table';
 
                 // 检查是否为"纳塔共四代英雄总结"表格（通过表头特征识别）
                 const isNatlanHeroTable = headerCells.some(cell => 

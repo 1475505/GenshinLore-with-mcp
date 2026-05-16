@@ -955,7 +955,7 @@ body {
     overflow-x: fixed;
 }
 
-.lightrelam-table {
+.common-table {
     width: 100%;
     border-collapse: collapse;
     font-family: 'Common', sans-serif;
@@ -963,7 +963,7 @@ body {
     line-height: 1.6;
 }
 
-.lightrelam-table th {
+.common-table th {
     background-color: #4d4f53;
     color: #D3BC8E;
     padding: 12px 15px;
@@ -972,23 +972,23 @@ body {
     font-weight: normal;
 }
 
-.lightrelam-table td {
+.common-table td {
     padding: 12px 15px;
     border: 1px solid #D3BC8E;
     text-align: center;
     color: #4d4f53;
 }
 
-.lightrelam-table td.text-left {
+.common-table td.text-left {
     text-align: left;
     padding-left: 20px;
 }
 
-.lightrelam-table tr:nth-child(even) {
+.common-table tr:nth-child(even) {
     background-color: #f5f5f5;
 }
 
-.lightrelam-table tr:hover {
+.common-table tr:hover {
     background-color: #f0f0f0;
 }
 
@@ -1051,12 +1051,12 @@ body {
         margin: 20px;
     }
     
-    .lightrelam-table {
+    .common-table {
         font-size: 12px;
     }
     
-    .lightrelam-table th,
-    .lightrelam-table td {
+    .common-table th,
+    .common-table td {
         padding: 8px 10px;
     }
 }

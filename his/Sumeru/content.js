@@ -1487,7 +1487,7 @@ sub floreis  lumen  sagacitatis
                 }
 
                 const table = document.createElement('table');
-                table.className = 'lightrelam-table';
+                table.className = 'common-table';
 
                 // 乐土瓦利·韦杰表格：设置列宽比例（第 1 列较宽，第 2 列更宽）
                 if (isLeTuWaLiTable && colCount >= 2) {
