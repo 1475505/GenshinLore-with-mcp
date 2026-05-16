@@ -117,7 +117,6 @@
                         <span class="notice-author">来源：${escapeHtml(notice.author)}</span>
                     </div>
                     <div class="notice-description">${escapeHtml(notice.description)}</div>
-                    ${index < notices.length - 1 ? '<hr class="notice-divider">' : ''}
                 </div>
             `;
         });
