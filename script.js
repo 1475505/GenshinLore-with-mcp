@@ -132,23 +132,26 @@ document.addEventListener('DOMContentLoaded', function() {
         tocExpandBtn.addEventListener('click', expandToc);
     }
     
-    // 移动端TOC交互
+    // 初始化移动端目录导航
     initMobileToc();
 });
 
+// 初始化移动端目录导航
 function initMobileToc() {
     const tocSidebar = document.querySelector('.toc-sidebar');
     if (!tocSidebar) return;
     
+    // 创建遮罩层
+    const tocOverlay = document.createElement('div');
+    tocOverlay.className = 'mobile-toc-overlay';
+    
+    // 创建悬浮球按钮
     const mobileTocBtn = document.createElement('button');
     mobileTocBtn.className = 'mobile-toc-btn';
     mobileTocBtn.setAttribute('aria-label', '打开目录');
     
-    const tocOverlay = document.createElement('div');
-    tocOverlay.className = 'toc-overlay';
-    
+    tocSidebar.parentNode.insertBefore(tocOverlay, tocSidebar.nextSibling);
     document.body.appendChild(mobileTocBtn);
-    document.body.appendChild(tocOverlay);
     
     function isMobile() {
         return window.innerWidth <= 1012;
@@ -158,14 +161,9 @@ function initMobileToc() {
         if (isMobile()) {
             mobileTocBtn.classList.remove('hidden');
             tocSidebar.classList.remove('collapsed');
-            if (!tocSidebar.classList.contains('mobile-active')) {
-                tocSidebar.style.display = 'none';
-            }
         } else {
             mobileTocBtn.classList.add('hidden');
-            tocOverlay.classList.remove('active');
-            tocSidebar.classList.remove('mobile-active');
-            tocSidebar.style.display = 'block';
+            closeMobileToc();
         }
     }
     
@@ -187,6 +185,22 @@ function initMobileToc() {
     
     mobileTocBtn.addEventListener('click', openMobileToc);
     tocOverlay.addEventListener('click', closeMobileToc);
+    
+    // 点击收起按钮关闭侧边栏
+    const collapseBtn = document.querySelector('.toc-collapse-btn');
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeMobileToc();
+        });
+    }
+    
+    // 点击目录项后关闭侧边栏
+    tocSidebar.querySelectorAll('.toc-link').forEach(link => {
+        link.addEventListener('click', function() {
+            closeMobileToc();
+        });
+    });
     
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && tocSidebar.classList.contains('mobile-active')) {

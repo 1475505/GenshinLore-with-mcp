@@ -560,65 +560,140 @@ body {
         display: none; /* 在移动端隐藏指示器 */
     }
 
-    /* 页面目录导航移动端适配 */
+    /* 移动端目录导航适配 */
+    .toc-wrapper {
+        visibility: hidden;
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
     .toc-sidebar {
-        position: fixed;
-        right: 0;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        max-width: 100%;
-        max-height: 70vh;
-        margin: 0;
-        border-radius: 12px 12px 0 0;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-        border: none;
-        border-top: 2px solid #D3BC8E;
-        padding: 30px 20px 20px;
-        transform: translateY(100%);
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 1000;
-        display: none;
+        position: fixed !important;
+        right: 0 !important;
+        top: 0 !important;
+        width: 85% !important;
+        max-width: 280px !important;
+        height: 100% !important;
+        background-color: #fff !important;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2) !important;
+        transform: translateX(100%) !important;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        z-index: 1000 !important;
+        padding: 20px !important;
+        overflow-y: auto !important;
+        display: block !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        visibility: visible !important;
     }
 
     .toc-sidebar.mobile-active {
-        display: block;
-        transform: translateY(0);
+        transform: translateX(0) !important;
     }
 
     .toc-sidebar .toc-title {
-        padding-right: 40px;
+        font-size: 18px;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #D3BC8E;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .toc-sidebar .toc-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .toc-sidebar .toc-item {
+        margin-bottom: 8px;
+    }
+
+    .toc-sidebar .toc-link {
+        display: block;
+        padding: 10px 12px;
+        color: #4d4f53;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+    }
+
+    .toc-sidebar .toc-link:hover {
+        background-color: rgba(211, 188, 142, 0.15);
+    }
+
+    .toc-sidebar .toc-link.active {
+        background-color: rgba(211, 188, 142, 0.3);
+        color: #D3BC8E;
+    }
+
+    .toc-collapse-btn {
+        display: flex !important;
+        position: absolute;
+        right: 10px;
+        top: 15px;
+        background: none;
+        border: 1px solid #D3BC8E;
+        color: #D3BC8E;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.2s ease;
+        z-index: 1001;
+    }
+
+    .toc-collapse-btn:hover {
+        background-color: rgba(211, 188, 142, 0.15);
+    }
+
+    .toc-expand-btn {
+        display: none;
     }
 
     .mobile-toc-btn {
         position: fixed;
-        right: 20px;
+        top: auto;
+        left: 20px;
+        right: auto;
         bottom: 30px;
         width: 56px;
         height: 56px;
-        background-color: #D3BC8E;
-        border-radius: 50%;
-        border: 3px solid #fff;
-        box-shadow: 0 4px 15px rgba(211, 188, 142, 0.4);
+        background-color: #4d4f53;
+        color: #D3BC8E;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         z-index: 999;
         transition: all 0.3s ease;
+        font-size: 20px;
+        font-weight: bold;
+        margin: 0;
+        padding: 0;
+        -webkit-transform: none;
+        transform: none;
     }
 
     .mobile-toc-btn:hover {
         transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(211, 188, 142, 0.5);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     }
 
     .mobile-toc-btn::before {
         content: '☰';
-        color: #4d4f53;
-        font-size: 20px;
-        font-weight: bold;
     }
 
     .mobile-toc-btn.hidden {
@@ -627,20 +702,20 @@ body {
         transform: translateY(20px);
     }
 
-    .toc-overlay {
+    .mobile-toc-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
-        z-index: 998;
-        display: none;
+        z-index: 999;
         transition: opacity 0.3s ease;
     }
 
-    .toc-overlay.active {
+    .mobile-toc-overlay.active {
         display: block;
+        visibility: visible;
     }
 
     .main-text {
@@ -758,9 +833,9 @@ body {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
     z-index: 10000;
 }
 
@@ -786,15 +861,15 @@ body {
 }
 
 .section-subtitle.has-footnote:hover .tooltip {
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
 }
 
 .section-subtitle.has-footnote .tooltip {
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
 }
 
 .section-title.has-footnote {
@@ -810,15 +885,15 @@ body {
 }
 
 .section-title.has-footnote:hover .tooltip {
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
 }
 
 .section-title.has-footnote .tooltip {
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
 }
 
 .has-footnote:hover .tooltip {
@@ -829,9 +904,9 @@ body {
 
 .tooltip {
     position: absolute;
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
     background-color: #4d4f53;
     color: #D3BC8E;
     padding: 10px 14px;
@@ -840,12 +915,13 @@ body {
     white-space: normal;
     width: 350px;
     max-width: 350px;
+    min-width: 100px;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
     z-index: 4000;
     pointer-events: auto;
-    text-align: left;
+    text-align: middle;
     line-height: 1.5;
     font-family: 'Common', sans-serif;
 }
@@ -883,15 +959,15 @@ body {
 }
 
 .intro-text .has-footnote:hover .tooltip {
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
 }
 
 .intro-text .tooltip {
-    left: 100%;
+    left: 50%;
     top: 0;
-    margin-left: 5px;
+    transform: translateX(-50%);
 }
 
 .basiclore-section {

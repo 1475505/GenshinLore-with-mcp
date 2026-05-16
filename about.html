@@ -815,49 +815,9 @@
                 a.style.textDecoration = 'none';
                 a.innerHTML = item.text;
                 
-                a.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const target = document.getElementById(item.id);
-                    if (target) {
-                        const offset = 100;
-                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-                        window.scrollTo({
-                            top: targetPosition,
-                            behavior: 'smooth'
-                        });
-                        
-                        updateTocHighlight(item.id);
-                    }
-                });
-                
                 li.appendChild(a);
                 tocList.appendChild(li);
             });
-            
-            // 折叠/展开功能
-            const tocCollapseBtn = document.getElementById('toc-collapse');
-            const tocExpandBtn = document.getElementById('toc-expand');
-            const tocSidebar = document.querySelector('.toc-sidebar');
-            
-            function collapseToc() {
-                tocSidebar.classList.add('collapsed');
-                tocCollapseBtn.style.display = 'none';
-                tocExpandBtn.classList.add('visible');
-            }
-            
-            function expandToc() {
-                tocSidebar.classList.remove('collapsed');
-                tocCollapseBtn.style.display = 'flex';
-                tocExpandBtn.classList.remove('visible');
-            }
-            
-            if (tocCollapseBtn) {
-                tocCollapseBtn.addEventListener('click', collapseToc);
-            }
-            
-            if (tocExpandBtn) {
-                tocExpandBtn.addEventListener('click', expandToc);
-            }
             
             // 初始化高亮
             updateTocHighlight();
@@ -907,6 +867,11 @@
                 });
             }
         });
+        
+        // 初始化移动端目录导航（确保目录DOM创建完成后调用）
+        if (typeof initMobileToc === 'function') {
+            initMobileToc();
+        }
     </script>
 </body>
 </html>

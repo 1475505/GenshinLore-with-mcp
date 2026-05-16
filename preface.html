@@ -118,7 +118,7 @@
             margin: 15px 0;
         }
 
-        /* 脚注样式保持不变 */
+        /* 脚注样式 */
         .has-footnote {
             position: relative;
             display: inline-flex;
@@ -132,18 +132,20 @@
 
         .tooltip {
             position: absolute;
-            left: 100%;
+            left: auto;
             top: 0;
-            margin-left: 5px;
+            margin-left: auto;
             background-color: #4d4f53;
             color: #D3BC8E;
             padding: 10px 14px;
             border-radius: 6px;
             font-size: 14px;
             white-space: normal;
-            width: 350px;
-            max-width: 350px;
+            width: auto;
+            min-width: 250px;
+            max-width: 500px;
             opacity: 0;
+            box-sizing: border-box;
             visibility: hidden;
             transition: all 0.3s ease;
             z-index: 4000;
@@ -279,7 +281,7 @@
             </div>
         </div>
         <p>网站作者注：如果遇到非内容问题，可以在Github项目页面提交Issue</p>
-        <p style="text-align: center;"><a href="https://github.com/Dennis114514/GenshinLore" target="_blank"><img src="img/others/GenshinLore.png" alt="GenshinLore Github项目" style="max-width: 500px; cursor: pointer;"></a></p>
+        <p style="text-align: center;"><a href="https://github.com/Dennis114514/GenshinLore" target="_blank"><img src="img/others/GenshinLore.png" alt="GenshinLore Github项目" style="width:auto; max-width: 400px; cursor: pointer;"></a></p>
 
         <h3 id="section-3-3">（三）ai的局限性</h3>
         
@@ -559,49 +561,9 @@
                 a.className = 'toc-link level-' + item.level;
                 a.textContent = item.text;
                 
-                a.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const target = document.getElementById(item.id);
-                    if (target) {
-                        const offset = 100;
-                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-                        window.scrollTo({
-                            top: targetPosition,
-                            behavior: 'smooth'
-                        });
-                        
-                        updateTocHighlight(item.id);
-                    }
-                });
-                
                 li.appendChild(a);
                 tocList.appendChild(li);
             });
-            
-            // 折叠/展开功能
-            const tocCollapseBtn = document.getElementById('toc-collapse');
-            const tocExpandBtn = document.getElementById('toc-expand');
-            const tocSidebar = document.querySelector('.toc-sidebar');
-            
-            function collapseToc() {
-                tocSidebar.classList.add('collapsed');
-                tocCollapseBtn.style.display = 'none';
-                tocExpandBtn.classList.add('visible');
-            }
-            
-            function expandToc() {
-                tocSidebar.classList.remove('collapsed');
-                tocCollapseBtn.style.display = 'flex';
-                tocExpandBtn.classList.remove('visible');
-            }
-            
-            if (tocCollapseBtn) {
-                tocCollapseBtn.addEventListener('click', collapseToc);
-            }
-            
-            if (tocExpandBtn) {
-                tocExpandBtn.addEventListener('click', expandToc);
-            }
             
             // 初始化高亮
             updateTocHighlight();
@@ -686,6 +648,11 @@
                     button.style.opacity = '0.6';
                 }, 2000);
             });
+        }
+        
+        // 初始化移动端目录导航（确保目录DOM创建完成后调用）
+        if (typeof initMobileToc === 'function') {
+            initMobileToc();
         }
     </script>
 </body>
