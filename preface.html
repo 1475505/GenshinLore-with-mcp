@@ -198,10 +198,13 @@
         </nav>
     </header>
     <main class="main-content">
-        <aside class="toc-sidebar">
-            <h3 class="toc-title">目录导航 <button class="toc-toggle-btn" id="toc-toggle">↑</button></h3>
-            <ul class="toc-list" id="toc-list">
-            </ul>
+        <aside class="toc-wrapper">
+            <aside class="toc-sidebar">
+                <h3 class="toc-title">目录导航 <button class="toc-collapse-btn" id="toc-collapse">→</button></h3>
+                <ul class="toc-list" id="toc-list">
+                </ul>
+            </aside>
+            <button class="toc-expand-btn" id="toc-expand">☰</button>
         </aside>
         
         <section class="page-content">
@@ -576,11 +579,28 @@
             });
             
             // 折叠/展开功能
-            if (tocToggle) {
-                tocToggle.addEventListener('click', function() {
-                    tocList.classList.toggle('collapsed');
-                    this.classList.toggle('rotated');
-                });
+            const tocCollapseBtn = document.getElementById('toc-collapse');
+            const tocExpandBtn = document.getElementById('toc-expand');
+            const tocSidebar = document.querySelector('.toc-sidebar');
+            
+            function collapseToc() {
+                tocSidebar.classList.add('collapsed');
+                tocCollapseBtn.style.display = 'none';
+                tocExpandBtn.classList.add('visible');
+            }
+            
+            function expandToc() {
+                tocSidebar.classList.remove('collapsed');
+                tocCollapseBtn.style.display = 'flex';
+                tocExpandBtn.classList.remove('visible');
+            }
+            
+            if (tocCollapseBtn) {
+                tocCollapseBtn.addEventListener('click', collapseToc);
+            }
+            
+            if (tocExpandBtn) {
+                tocExpandBtn.addEventListener('click', expandToc);
             }
             
             // 初始化高亮

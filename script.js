@@ -108,15 +108,96 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // TOC toggle functionality
-    const tocToggleBtn = document.getElementById('toc-toggle');
-    if (tocToggleBtn) {
-        tocToggleBtn.addEventListener('click', function() {
-            const tocList = document.getElementById('toc-list');
-            tocList.classList.toggle('collapsed');
-            this.classList.toggle('rotated');
-        });
+    const tocCollapseBtn = document.getElementById('toc-collapse');
+    const tocExpandBtn = document.getElementById('toc-expand');
+    const tocSidebar = document.querySelector('.toc-sidebar');
+    
+    function collapseToc() {
+        tocSidebar.classList.add('collapsed');
+        tocCollapseBtn.style.display = 'none';
+        tocExpandBtn.classList.add('visible');
     }
+    
+    function expandToc() {
+        tocSidebar.classList.remove('collapsed');
+        tocCollapseBtn.style.display = 'flex';
+        tocExpandBtn.classList.remove('visible');
+    }
+    
+    if (tocCollapseBtn && tocSidebar) {
+        tocCollapseBtn.addEventListener('click', collapseToc);
+    }
+    
+    if (tocExpandBtn && tocSidebar) {
+        tocExpandBtn.addEventListener('click', expandToc);
+    }
+    
+    // 移动端TOC交互
+    initMobileToc();
 });
+
+function initMobileToc() {
+    const tocSidebar = document.querySelector('.toc-sidebar');
+    if (!tocSidebar) return;
+    
+    const mobileTocBtn = document.createElement('button');
+    mobileTocBtn.className = 'mobile-toc-btn';
+    mobileTocBtn.setAttribute('aria-label', '打开目录');
+    
+    const tocOverlay = document.createElement('div');
+    tocOverlay.className = 'toc-overlay';
+    
+    document.body.appendChild(mobileTocBtn);
+    document.body.appendChild(tocOverlay);
+    
+    function isMobile() {
+        return window.innerWidth <= 1012;
+    }
+    
+    function updateMobileTocVisibility() {
+        if (isMobile()) {
+            mobileTocBtn.classList.remove('hidden');
+            tocSidebar.classList.remove('collapsed');
+            if (!tocSidebar.classList.contains('mobile-active')) {
+                tocSidebar.style.display = 'none';
+            }
+        } else {
+            mobileTocBtn.classList.add('hidden');
+            tocOverlay.classList.remove('active');
+            tocSidebar.classList.remove('mobile-active');
+            tocSidebar.style.display = 'block';
+        }
+    }
+    
+    function openMobileToc() {
+        tocSidebar.classList.add('mobile-active');
+        tocOverlay.classList.add('active');
+        mobileTocBtn.classList.add('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeMobileToc() {
+        tocSidebar.classList.remove('mobile-active');
+        tocOverlay.classList.remove('active');
+        setTimeout(() => {
+            mobileTocBtn.classList.remove('hidden');
+        }, 350);
+        document.body.style.overflow = '';
+    }
+    
+    mobileTocBtn.addEventListener('click', openMobileToc);
+    tocOverlay.addEventListener('click', closeMobileToc);
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && tocSidebar.classList.contains('mobile-active')) {
+            closeMobileToc();
+        }
+    });
+    
+    window.addEventListener('resize', updateMobileTocVisibility);
+    
+    updateMobileTocVisibility();
+}
 
 // 初始化移动端汉堡菜单
 function initMobileMenu() {

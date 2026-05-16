@@ -19,30 +19,36 @@
                     <a href="main.html" data-nav="home">首页</a>
                 </li>
                 <li class="nav-item" data-index="1">
+                    <a href="preface.html" data-nav="preface">前言</a>
+                </li>
+                <li class="nav-item" data-index="2">
                     <a href="basiclore.html" data-nav="basic">基本设定</a>
                 </li>
-                <li class="nav-item active" data-index="2">
+                <li class="nav-item active" data-index="3">
                     <a href="Teyvathis.html" data-nav="history">提瓦特历史</a>
                 </li>
-                <li class="nav-item" data-index="3">
+                <li class="nav-item" data-index="4">
                     <a href="history-country.html" data-nav="nations">各国历史</a>
                 </li>
-                <li class="nav-item" data-index="4">
-                    <a href="genshinbasichis.html" data-nav="brief">原神简史</a>
-                </li>
                 <li class="nav-item" data-index="5">
-                    <a href="about.html" data-nav="about-manual">关于手册</a>
+                    <a href="genshinbasichis.html" data-nav="brief">时间线</a>
                 </li>
                 <li class="nav-item" data-index="6">
+                    <a href="about.html" data-nav="about-manual">关于手册</a>
+                </li>
+                <li class="nav-item" data-index="7">
                     <a href="aboutsite.html" data-nav="about-site">关于本站</a>
                 </li>
             </ul>
         </nav>
     </header>
     <main class="main-content">
-        <aside class="toc-sidebar">
-            <h3 class="toc-title">目录导航 <button class="toc-toggle-btn" id="toc-toggle">↑</button></h3>
-            <ul class="toc-list" id="toc-list"></ul>
+        <aside class="toc-wrapper">
+            <aside class="toc-sidebar">
+                <h3 class="toc-title">目录导航 <button class="toc-collapse-btn" id="toc-collapse">→</button></h3>
+                <ul class="toc-list" id="toc-list"></ul>
+            </aside>
+            <button class="toc-expand-btn" id="toc-expand">☰</button>
         </aside>
 
         <section class="page-content">
