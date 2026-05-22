@@ -72,22 +72,39 @@ function parseMdSections(md) {
  * Extract readable text from HTML, stripping tags but preserving structure.
  */
 function htmlToText(html) {
-  return html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
-    .replace(/<\/tr>/gi, "\n")
-    .replace(/<\/td>/gi, " | ")
-    .replace(/<\/th>/gi, " | ")
-    .replace(/<span class="tooltip">([^<]*)<\/span>/gi, "[$1]")
-    .replace(/<span[^>]*class="black-block"[^>]*title="([^"]*)"[^>]*>[^<]*<\/span>/gi, "$1")
-    .replace(/<sup>\d+<\/sup>/g, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  // First, extract specific structured content before stripping all tags
+  let text = html;
+
+  // Preserve tooltip content
+  text = text.replace(/<span class="tooltip">([^<]*)<\/span>/gi, "[$1]");
+  // Reveal hidden text
+  text = text.replace(/<span[^>]*class="black-block"[^>]*title="([^"]*)"[^>]*>[^<]*<\/span>/gi, "$1");
+  // Remove footnote markers
+  text = text.replace(/<sup>\d+<\/sup>/g, "");
+
+  // Convert structural tags to text equivalents
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/p>/gi, "\n");
+  text = text.replace(/<\/tr>/gi, "\n");
+  text = text.replace(/<\/td>/gi, " | ");
+  text = text.replace(/<\/th>/gi, " | ");
+
+  // Strip all remaining HTML tags using a loop to handle nested/malformed tags
+  let prev;
+  do {
+    prev = text;
+    text = text.replace(/<[^>]+>/g, "");
+  } while (text !== prev);
+
+  // Decode HTML entities last, after all tags are removed
+  text = text.replace(/&lt;/g, "<");
+  text = text.replace(/&gt;/g, ">");
+  text = text.replace(/&amp;/g, "&");
+  text = text.replace(/&nbsp;/g, " ");
+
+  // Normalize whitespace
+  text = text.replace(/\n{3,}/g, "\n\n");
+  return text.trim();
 }
 
 /**
