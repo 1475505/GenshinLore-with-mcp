@@ -3,13 +3,14 @@
 // Reads lore directly from md/ source files and basiclore/ HTML at startup.
 // Provides 3 tools: get_categories, read_lore, search_lore
 // Uses Streamable HTTP transport (default port 3000)
+// Optionally serves the static website on the same port (set SERVE_STATIC=true)
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "http";
 import { randomUUID } from "crypto";
-import { readFileSync, readdirSync, existsSync } from "fs";
-import { join, basename, dirname } from "path";
+import { readFileSync, readdirSync, existsSync, statSync } from "fs";
+import { join, basename, dirname, extname } from "path";
 import { fileURLToPath } from "url";
 import { z } from "zod";
 
@@ -448,9 +449,63 @@ function extractSnippet(text, query, contextChars = 150) {
   return snippet;
 }
 
+// ─── Static file serving ────────────────────────────────────────────────────
+
+const MIME_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
+  ".xml": "application/xml",
+  ".md": "text/markdown; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+};
+
+function serveStaticFile(req, res) {
+  let urlPath = req.url.split("?")[0];
+  if (urlPath.endsWith("/")) urlPath += "index.html";
+
+  // Prevent path traversal
+  const safePath = join(REPO_ROOT, urlPath).replace(/\.\./g, "");
+  if (!safePath.startsWith(REPO_ROOT)) {
+    res.writeHead(403, { "Content-Type": "text/plain" });
+    res.end("Forbidden");
+    return;
+  }
+
+  if (!existsSync(safePath) || statSync(safePath).isDirectory()) {
+    // Try appending index.html for directories
+    const indexPath = join(safePath, "index.html");
+    if (existsSync(indexPath)) {
+      const content = readFileSync(indexPath);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(content);
+      return;
+    }
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    res.end("Not Found");
+    return;
+  }
+
+  const ext = extname(safePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] || "application/octet-stream";
+  const content = readFileSync(safePath);
+  res.writeHead(200, { "Content-Type": contentType });
+  res.end(content);
+}
+
 // ─── Start ──────────────────────────────────────────────────────────────────
 
 const PORT = parseInt(process.env.PORT || "3000", 10);
+const SERVE_STATIC = process.env.SERVE_STATIC === "true";
 
 async function main() {
   const transport = new StreamableHTTPServerTransport({
@@ -485,12 +540,19 @@ async function main() {
       return;
     }
 
+    // Serve static website files when enabled
+    if (SERVE_STATIC) {
+      serveStaticFile(req, res);
+      return;
+    }
+
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found. MCP endpoint is at /mcp");
   });
 
   httpServer.listen(PORT, () => {
-    console.error(`GenshinLore MCP server running at http://localhost:${PORT}/mcp`);
+    const mode = SERVE_STATIC ? "MCP + Static Website" : "MCP only";
+    console.error(`GenshinLore server (${mode}) running at http://localhost:${PORT}/mcp`);
   });
 }
 

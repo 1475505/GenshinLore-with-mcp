@@ -111,6 +111,41 @@ PORT=8080 npm start  # 使用 8080 端口
 }
 ```
 
+### 同时提供网页服务
+
+设置环境变量 `SERVE_STATIC=true`，同一个进程即可同时作为 MCP 服务器和静态网站服务器：
+
+```bash
+SERVE_STATIC=true npm start
+```
+
+此时访问 `http://localhost:3000/` 即可浏览网站，`/mcp` 端点继续处理 MCP 请求。
+
+### 部署到云平台（Railway / Render / Fly.io）
+
+由于服务器是标准的 HTTP 服务，可以直接部署到各类云平台。以 Railway 为例：
+
+1. 在 Railway 创建新项目，连接 GitHub 仓库
+2. **Root Directory 保持为仓库根目录**（因为 MCP 服务器需要读取上级目录的 `md/` 和 `basiclore/`）
+3. 设置构建与启动命令：
+   - **Build Command**: `cd mcp-server && npm install`
+   - **Start Command**: `cd mcp-server && npm start`
+4. 如需同时提供网页服务，添加环境变量 `SERVE_STATIC=true`
+5. `PORT` 环境变量由平台自动注入，无需手动配置
+6. 部署后，MCP 端点地址为 `https://<your-app>.up.railway.app/mcp`
+
+客户端配置示例（远程部署）：
+
+```json
+{
+  "mcpServers": {
+    "genshinlore": {
+      "url": "https://<your-app>.up.railway.app/mcp"
+    }
+  }
+}
+```
+
 ## 项目结构
 ```
 <!-- TREE-START -->
