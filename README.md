@@ -71,9 +71,10 @@
 ```bash
 cd mcp-server
 npm install
-npm run build-data   # 解析 md/ 和 basiclore/ 内容生成索引
 npm start            # 启动 MCP 服务器 (stdio 模式)
 ```
+
+服务器启动时会自动从 `md/` 目录的 Markdown 源文件以及 `basiclore/` 的 HTML 文件中解析内容，无需预构建步骤。
 
 ### 提供的工具
 

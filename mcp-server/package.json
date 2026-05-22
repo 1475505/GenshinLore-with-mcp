@@ -8,7 +8,6 @@
     "genshinlore-mcp": "./index.js"
   },
   "scripts": {
-    "build-data": "node parse-content.js",
     "start": "node index.js"
   },
   "keywords": [

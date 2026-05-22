@@ -1,22 +1,248 @@
 #!/usr/bin/env node
 // GenshinLore MCP Server
+// Reads lore directly from md/ source files and basiclore/ HTML at startup.
 // Provides 3 tools: get_categories, read_lore, search_lore
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
+import { readFileSync, readdirSync, existsSync } from "fs";
+import { join, basename, dirname } from "path";
 import { fileURLToPath } from "url";
 import { z } from "zod";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const REPO_ROOT = join(__dirname, "..");
 
-// Load pre-parsed lore index
-const loreIndexPath = join(__dirname, "data", "lore-index.json");
-const loreIndex = JSON.parse(readFileSync(loreIndexPath, "utf-8"));
+// ─── Markdown parsing ───────────────────────────────────────────────────────
 
-// Create MCP server
+function parseMdSections(md) {
+  const lines = md.split("\n");
+  let title = "";
+  const introLines = [];
+  const sections = [];
+  let currentHeading = null;
+  let currentLines = [];
+  let inIntro = true;
+
+  for (const line of lines) {
+    const h1Match = line.match(/^#\s+(.+)/);
+    if (h1Match && !title) {
+      title = h1Match[1].replace(/\*\*/g, "").trim();
+      continue;
+    }
+
+    const h2Match = line.match(/^(#{2,3})\s+(.+)/);
+    if (h2Match) {
+      inIntro = false;
+      if (currentHeading !== null) {
+        sections.push({
+          heading: currentHeading,
+          content: currentLines.join("\n").trim(),
+        });
+      }
+      currentHeading = h2Match[2].replace(/<sup>\d+<\/sup>/g, "").trim();
+      currentLines = [];
+      continue;
+    }
+
+    if (inIntro) {
+      introLines.push(line);
+    } else {
+      currentLines.push(line);
+    }
+  }
+
+  if (currentHeading !== null) {
+    sections.push({
+      heading: currentHeading,
+      content: currentLines.join("\n").trim(),
+    });
+  }
+
+  return {
+    title,
+    intro: introLines.join("\n").trim(),
+    sections,
+  };
+}
+
+// ─── HTML parsing (for basiclore and Mondstadt which have no .md source) ────
+
+function htmlToText(html) {
+  let text = html;
+  text = text.replace(/<span class="tooltip">([^<]*)<\/span>/gi, "[$1]");
+  text = text.replace(
+    /<span[^>]*class="black-block"[^>]*title="([^"]*)"[^>]*>[^<]*<\/span>/gi,
+    "$1"
+  );
+  text = text.replace(/<sup>\d+<\/sup>/g, "");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/p>/gi, "\n");
+  text = text.replace(/<\/tr>/gi, "\n");
+  text = text.replace(/<\/td>/gi, " | ");
+  text = text.replace(/<\/th>/gi, " | ");
+
+  let prev;
+  do {
+    prev = text;
+    text = text.replace(/<[^>]+>/g, "");
+  } while (text !== prev);
+
+  text = text.replace(/&amp;/g, "&");
+  text = text.replace(/&lt;/g, "<");
+  text = text.replace(/&gt;/g, ">");
+  text = text.replace(/&nbsp;/g, " ");
+  text = text.replace(/\n{3,}/g, "\n\n");
+  return text.trim();
+}
+
+function parseBasicloreHtml(htmlContent, categoryName) {
+  const mainMatch = htmlContent.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+  if (!mainMatch) return null;
+
+  const mainHtml = mainMatch[1];
+  const sectionBlocks = mainHtml.split(/<section[^>]*>/i).filter(Boolean);
+  const sections = [];
+
+  for (const block of sectionBlocks) {
+    const h2Match = block.match(/<h2[^>]*>([^<]*(?:<[^>]*>[^<]*)*)<\/h2>/i);
+    if (h2Match) {
+      const heading = htmlToText(h2Match[1]);
+      const content = htmlToText(block);
+      if (content.trim()) {
+        sections.push({ heading, content });
+      }
+    }
+  }
+
+  if (sections.length === 0) {
+    const content = htmlToText(mainHtml);
+    if (content.trim()) {
+      sections.push({ heading: categoryName, content });
+    }
+  }
+
+  return { title: categoryName, intro: "", sections };
+}
+
+function parseMondstadtHtml(htmlContent) {
+  const mainMatch = htmlContent.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+  if (!mainMatch) return null;
+
+  const mainHtml = mainMatch[1];
+  let title = "\u5E8F\u7AE0\uFF1A\u8499\u5FB7\u00B7\u6355\u98CE\u7684\u5F02\u4E61\u4EBA";
+
+  const titleMatch = mainHtml.match(
+    /<h1[^>]*>([^<]*(?:<[^>]*>[^<]*)*)<\/h1>/i
+  );
+  if (titleMatch) {
+    title = htmlToText(titleMatch[1]);
+  }
+
+  const sections = [];
+  const h2Regex = /<h2[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/h2>/gi;
+  const h2Matches = [...mainHtml.matchAll(h2Regex)];
+
+  for (let i = 0; i < h2Matches.length; i++) {
+    const heading = htmlToText(h2Matches[i][2]);
+    const start = h2Matches[i].index + h2Matches[i][0].length;
+    const end =
+      i + 1 < h2Matches.length ? h2Matches[i + 1].index : mainHtml.length;
+    const sectionHtml = mainHtml.slice(start, end);
+    const content = htmlToText(sectionHtml);
+    if (content.trim()) {
+      sections.push({ heading, content });
+    }
+  }
+
+  return { title, intro: "", sections };
+}
+
+// ─── Build lore index from source files at startup ──────────────────────────
+
+function buildLoreIndex() {
+  const index = {};
+
+  // 1. Parse md/*.md files directly
+  const mdDir = join(REPO_ROOT, "md");
+  if (existsSync(mdDir)) {
+    const mdFiles = readdirSync(mdDir).filter(
+      (f) => f.endsWith(".md") && f !== "aboutsite.md" && f !== "somewords.md"
+    );
+    for (const file of mdFiles) {
+      const content = readFileSync(join(mdDir, file), "utf-8");
+      const categoryName = basename(file, ".md");
+      const parsed = parseMdSections(content);
+      index[categoryName] = {
+        title: parsed.title || categoryName,
+        source: `md/${file}`,
+        intro: parsed.intro,
+        sections: parsed.sections,
+      };
+    }
+  }
+
+  // 2. Parse basiclore HTML files (no md source available)
+  const basicloreDir = join(REPO_ROOT, "basiclore");
+  const basicloreNames = {
+    descenders: "\u964D\u4E34\u8005",
+    facilities: "\u8BBE\u65BD",
+    god: "\u9B54\u795E/\u90AA\u795E",
+    lightrelam: "\u5149\u754C",
+    principles: "\u5929\u7406/\u4EBA\u754C",
+    stars: "\u661F\u7A7A",
+    void: "\u865A\u7A7A",
+  };
+
+  if (existsSync(basicloreDir)) {
+    const dirs = readdirSync(basicloreDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
+
+    for (const dir of dirs) {
+      const htmlPath = join(basicloreDir, dir, "base.html");
+      if (!existsSync(htmlPath)) continue;
+      const htmlContent = readFileSync(htmlPath, "utf-8");
+      const displayName = basicloreNames[dir] || dir;
+      const parsed = parseBasicloreHtml(htmlContent, displayName);
+      if (parsed) {
+        index[`basiclore_${dir}`] = {
+          title: displayName,
+          source: `basiclore/${dir}/base.html`,
+          intro: parsed.intro,
+          sections: parsed.sections,
+        };
+      }
+    }
+  }
+
+  // 3. Parse Mondstadt HTML (no md source, content in raw HTML)
+  const mondstadtPath = join(REPO_ROOT, "his", "Mondstadt", "base.html");
+  if (existsSync(mondstadtPath)) {
+    const htmlContent = readFileSync(mondstadtPath, "utf-8");
+    const parsed = parseMondstadtHtml(htmlContent);
+    if (parsed) {
+      index["Mondstadt"] = {
+        title: parsed.title,
+        source: "his/Mondstadt/base.html",
+        intro: parsed.intro,
+        sections: parsed.sections,
+      };
+    }
+  }
+
+  return index;
+}
+
+// Build index from source files
+const loreIndex = buildLoreIndex();
+console.error(
+  `Loaded ${Object.keys(loreIndex).length} categories from source files`
+);
+
+// ─── Create MCP server ─────────────────────────────────────────────────────
+
 const server = new McpServer({
   name: "genshinlore",
   version: "1.0.0",
@@ -32,6 +258,7 @@ server.tool(
     const categories = Object.entries(loreIndex).map(([key, value]) => ({
       key,
       title: value.title,
+      source: value.source,
       sectionCount: value.sections.length,
       sections: value.sections.map((s) => s.heading),
     }));
@@ -81,7 +308,6 @@ server.tool(
     }
 
     if (section) {
-      // Find matching section (case-insensitive, partial match)
       const normalizedQuery = section.toLowerCase();
       const match = entry.sections.find(
         (s) =>
@@ -114,7 +340,6 @@ server.tool(
       };
     }
 
-    // Return full document
     let fullText = `# ${entry.title}\n\n`;
     if (entry.intro) {
       fullText += entry.intro + "\n\n";
@@ -152,7 +377,6 @@ server.tool(
     const results = [];
 
     for (const [categoryKey, entry] of Object.entries(loreIndex)) {
-      // Search intro
       if (entry.intro && entry.intro.toLowerCase().includes(normalizedQuery)) {
         results.push({
           category: categoryKey,
@@ -162,7 +386,6 @@ server.tool(
         });
       }
 
-      // Search sections
       for (const sec of entry.sections) {
         const inHeading = sec.heading.toLowerCase().includes(normalizedQuery);
         const inContent = sec.content.toLowerCase().includes(normalizedQuery);
