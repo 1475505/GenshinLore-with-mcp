@@ -71,10 +71,23 @@
 ```bash
 cd mcp-server
 npm install
-npm start            # 启动 MCP 服务器 (stdio 模式)
+npm start            # 启动 MCP 服务器 (默认 http://localhost:3000/mcp)
 ```
 
 服务器启动时会自动从 `md/` 目录的 Markdown 源文件以及 `basiclore/` 的 HTML 文件中解析内容，无需预构建步骤。
+
+可通过环境变量 `PORT` 自定义端口：
+
+```bash
+PORT=8080 npm start  # 使用 8080 端口
+```
+
+### 传输协议
+
+服务器使用 **Streamable HTTP** 传输协议（MCP 规范推荐），通过 HTTP 提供服务：
+
+- **MCP 端点**：`POST /mcp`（处理 JSON-RPC 请求）
+- **健康检查**：`GET /health`（返回服务器状态）
 
 ### 提供的工具
 
@@ -92,8 +105,7 @@ npm start            # 启动 MCP 服务器 (stdio 模式)
 {
   "mcpServers": {
     "genshinlore": {
-      "command": "node",
-      "args": ["/path/to/GenshinLore/mcp-server/index.js"]
+      "url": "http://localhost:3000/mcp"
     }
   }
 }

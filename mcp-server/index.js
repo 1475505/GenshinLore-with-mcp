@@ -2,9 +2,12 @@
 // GenshinLore MCP Server
 // Reads lore directly from md/ source files and basiclore/ HTML at startup.
 // Provides 3 tools: get_categories, read_lore, search_lore
+// Uses Streamable HTTP transport (default port 3000)
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { createServer } from "http";
+import { randomUUID } from "crypto";
 import { readFileSync, readdirSync, existsSync } from "fs";
 import { join, basename, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -447,10 +450,48 @@ function extractSnippet(text, query, contextChars = 150) {
 
 // ─── Start ──────────────────────────────────────────────────────────────────
 
+const PORT = parseInt(process.env.PORT || "3000", 10);
+
 async function main() {
-  const transport = new StdioServerTransport();
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: () => randomUUID(),
+  });
+
   await server.connect(transport);
-  console.error("GenshinLore MCP server running on stdio");
+
+  const httpServer = createServer((req, res) => {
+    // CORS headers for cross-origin MCP clients
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, mcp-session-id");
+    res.setHeader("Access-Control-Expose-Headers", "mcp-session-id");
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    // Route /mcp to the MCP transport
+    if (req.url === "/mcp") {
+      transport.handleRequest(req, res);
+      return;
+    }
+
+    // Health check
+    if (req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ status: "ok", categories: Object.keys(loreIndex).length }));
+      return;
+    }
+
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    res.end("Not Found. MCP endpoint is at /mcp");
+  });
+
+  httpServer.listen(PORT, () => {
+    console.error(`GenshinLore MCP server running at http://localhost:${PORT}/mcp`);
+  });
 }
 
 main().catch((err) => {
